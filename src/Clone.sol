@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.15;
 
 /// @title Clone
 /// @author zefram.eth, Saw-mon & Natalie
@@ -7,12 +7,17 @@ pragma solidity ^0.8.4;
 contract Clone {
     uint256 private constant ONE_WORD = 0x20;
 
+    function _getArgOnlyAddress() internal pure returns (address arg) {
+        assembly {
+            arg := shr(0x60, calldataload(sub(calldatasize(), 22)))
+        }
+    }
+
     /// @notice Reads an immutable arg with type address
     /// @param argOffset The offset of the arg in the packed data
     /// @return arg The arg value
     function _getArgAddress(uint256 argOffset) internal pure returns (address arg) {
         uint256 offset = _getImmutableArgsOffset();
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             arg := shr(0x60, calldataload(add(offset, argOffset)))
         }
@@ -23,7 +28,6 @@ contract Clone {
     /// @return arg The arg value
     function _getArgUint256(uint256 argOffset) internal pure returns (uint256 arg) {
         uint256 offset = _getImmutableArgsOffset();
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             arg := calldataload(add(offset, argOffset))
         }
@@ -37,7 +41,6 @@ contract Clone {
         uint256 offset = _getImmutableArgsOffset() + argOffset;
         arr = new uint256[](arrLen);
 
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             let i
             arrLen := mul(arrLen, ONE_WORD)
@@ -58,7 +61,6 @@ contract Clone {
     /// @return arg The arg value
     function _getArgUint64(uint256 argOffset) internal pure returns (uint64 arg) {
         uint256 offset = _getImmutableArgsOffset();
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             arg := shr(0xc0, calldataload(add(offset, argOffset)))
         }
@@ -69,7 +71,6 @@ contract Clone {
     /// @return arg The arg value
     function _getArgUint8(uint256 argOffset) internal pure returns (uint8 arg) {
         uint256 offset = _getImmutableArgsOffset();
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             arg := shr(0xf8, calldataload(add(offset, argOffset)))
         }
@@ -77,8 +78,8 @@ contract Clone {
 
     /// @return offset The offset of the packed immutable args in calldata
     function _getImmutableArgsOffset() internal pure returns (uint256 offset) {
-        // solhint-disable-next-line no-inline-assembly
         assembly {
+            //                                      read final 2 bytes of calldata, i.e. `extraLength`
             offset := sub(calldatasize(), shr(0xf0, calldataload(sub(calldatasize(), 2))))
         }
     }

@@ -1,32 +1,112 @@
 // SPDX-License-Identifier: BSD
+pragma solidity ^0.8.15;
 
-pragma solidity ^0.8.4;
+import {Create2} from "./Create2.sol";
 
 /// @title ClonesWithImmutableArgs
-/// @author wighawag, zefram.eth, Saw-mon & Natalie
+/// @author wighawag, zefram.eth, Saw-mon & Natalie, wminshew
 /// @notice Enables creating clone contracts with immutable args
 library ClonesWithImmutableArgs {
-    error CreateFail();
+    error CloneFailed();
 
     uint256 private constant FREE_MEMORY_POINTER_SLOT = 0x40;
     uint256 private constant BOOTSTRAP_LENGTH = 0x3f; // 63 (43 instructions + 20 for implementation address)
     uint256 private constant ONE_WORD = 0x20;
 
-    /// @notice Creates a clone proxy of the implementation contract, with immutable args
+    /// @notice Creates a clone proxy of the implementation contract with immutable args
     /// @dev data cannot exceed 65535 bytes, since 2 bytes are used to store the data length
     /// @param implementation The implementation contract to clone
     /// @param data Encoded immutable args
     /// @return instance The address of the created clone
-    function clone(address implementation, bytes memory data) internal returns (address payable instance) {
-        // unrealistic for memory ptr or data length to exceed 256 bits
-        // solhint-disable-next-line no-inline-assembly
+    function clone(address implementation, bytes memory data) internal returns (address instance) {
+        (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
+
         assembly {
+            instance := create(0, creationPtr, creationSize)
+        }
+
+        // if `create` failed, the instance address won't be set
+        if (instance == address(0)) {
+            revert CloneFailed();
+        }
+    }
+
+    /// @notice Creates a clone proxy of the implementation contract with immutable args
+    /// @dev data cannot exceed 65535 bytes, since 2 bytes are used to store the data length
+    /// @param implementation The implementation contract to clone
+    /// @param salt The salt for create2
+    /// @param data Encoded immutable args
+    /// @return instance The address of the created clone
+    function cloneDeterministic(
+        address implementation,
+        bytes32 salt,
+        bytes memory data
+    ) internal returns (address payable instance) {
+        (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
+
+        assembly {
+            instance := create2(0, creationPtr, creationSize, salt)
+        }
+
+        // if `create2` failed, the instance address won't be set
+        if (instance == address(0)) {
+            revert CloneFailed();
+        }
+    }
+
+    /// @notice Predicts the address where a deterministic clone of implementation will be deployed
+    /// @param implementation The implementation contract to clone
+    /// @param salt The salt for create2
+    /// @param data Encoded immutable args
+    /// @return predicted The predicted address of the created clone exists
+    function predictDeterministicAddress(
+        address implementation,
+        bytes32 salt,
+        address deployer,
+        bytes memory data
+    ) internal pure returns (address predicted) {
+        (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
+
+        bytes32 bytecodeHash;
+        assembly {
+            bytecodeHash := keccak256(creationPtr, creationSize)
+        }
+
+        predicted = Create2.computeAddress(salt, bytecodeHash, deployer);
+    }
+
+    /// @notice Predicts the address where a deterministic clone of implementation will be deployed
+    /// @param implementation The implementation contract to clone
+    /// @param salt The salt for create2
+    /// @param data Encoded immutable args
+    /// @return predicted The predicted address of the created clone exists
+    function predictDeterministicAddress(
+        address implementation,
+        bytes32 salt,
+        bytes memory data
+    ) internal view returns (address predicted) {
+        predicted = predictDeterministicAddress(implementation, salt, address(this), data);
+    }
+
+    /// @notice Computes the creation code for a clone with immutable args
+    /// @dev data cannot exceed 65535 bytes, since 2 bytes are used to store the data length
+    /// @param implementation The implementation contract to clone
+    /// @param data Encoded immutable args
+    /// @return ptr The ptr to the clone's bytecode
+    /// @return creationSize The size of the clone to be created
+    function _getCreationCode(
+        address implementation,
+        bytes memory data
+    ) private pure returns (uint256 ptr, uint256 creationSize) {
+        // unrealistic for memory ptr or data length to exceed 256 bits
+        assembly {
+            // TODO mark whether this assembly is memory safe for new IR optimizer
             let extraLength := add(mload(data), 2) // +2 bytes for telling how much data there is appended to the call
-            let creationSize := add(extraLength, BOOTSTRAP_LENGTH)
+            creationSize := add(extraLength, BOOTSTRAP_LENGTH)
             let runSize := sub(creationSize, 0x0a)
 
             // free memory pointer
-            let ptr := mload(FREE_MEMORY_POINTER_SLOT)
+            ptr := mload(FREE_MEMORY_POINTER_SLOT)
 
             // -------------------------------------------------------------------------------------------------------------
             // CREATION (10 bytes)
@@ -134,14 +214,8 @@ library ClonesWithImmutableArgs {
             copyPtr := add(copyPtr, counter)
             mstore(copyPtr, shl(0xf0, extraLength))
 
-            instance := create(0, ptr, creationSize)
-
             // Update free memory pointer
             mstore(FREE_MEMORY_POINTER_SLOT, add(ptr, creationSize))
-        }
-
-        if (instance == address(0)) {
-            revert CreateFail();
         }
     }
 }
