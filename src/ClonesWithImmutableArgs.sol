@@ -7,7 +7,16 @@ import {Create2} from "./Create2.sol";
 /// @author wighawag, zefram.eth, Saw-mon & Natalie, wminshew
 /// @notice Enables creating clone contracts with immutable args
 library ClonesWithImmutableArgs {
-    error CloneFailed();
+    // abi.encodeWithSignature("CreateFail()")
+    uint256 constant CreateFail_error_signature = 0xebfef18800000000000000000000000000000000000000000000000000000000;
+
+    // abi.encodeWithSignature("IdentityPrecompileFailure()")
+    uint256 constant IdentityPrecompileFailure_error_signature =
+        0x3a008ffa00000000000000000000000000000000000000000000000000000000;
+
+    uint256 constant custom_error_sig_ptr = 0x0;
+
+    uint256 constant custom_error_length = 0x4;
 
     uint256 private constant FREE_MEMORY_POINTER_SLOT = 0x40;
     uint256 private constant BOOTSTRAP_LENGTH = 0x3f; // 63 (43 instructions + 20 for implementation address)
@@ -21,13 +30,14 @@ library ClonesWithImmutableArgs {
     function clone(address implementation, bytes memory data) internal returns (address instance) {
         (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
 
-        assembly {
+        assembly ("memory-safe") {
             instance := create(0, creationPtr, creationSize)
-        }
 
-        // if `create` failed, the instance address won't be set
-        if (instance == address(0)) {
-            revert CloneFailed();
+            // if the create failed, the instance address won't be set
+            if iszero(instance) {
+                mstore(custom_error_sig_ptr, CreateFail_error_signature)
+                revert(custom_error_sig_ptr, custom_error_length)
+            }
         }
     }
 
@@ -44,13 +54,14 @@ library ClonesWithImmutableArgs {
     ) internal returns (address payable instance) {
         (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
 
-        assembly {
+        assembly ("memory-safe") {
             instance := create2(0, creationPtr, creationSize, salt)
-        }
 
-        // if `create2` failed, the instance address won't be set
-        if (instance == address(0)) {
-            revert CloneFailed();
+            // if the create failed, the instance address won't be set
+            if iszero(instance) {
+                mstore(custom_error_sig_ptr, CreateFail_error_signature)
+                revert(custom_error_sig_ptr, custom_error_length)
+            }
         }
     }
 
@@ -68,7 +79,7 @@ library ClonesWithImmutableArgs {
         (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
 
         bytes32 bytecodeHash;
-        assembly {
+        assembly ("memory-safe") {
             bytecodeHash := keccak256(creationPtr, creationSize)
         }
 
@@ -191,14 +202,8 @@ library ClonesWithImmutableArgs {
             let copyPtr := add(ptr, BOOTSTRAP_LENGTH)
             let dataPtr := add(data, ONE_WORD)
 
-            for {
-
-            } true {
-
-            } {
-                if lt(counter, ONE_WORD) {
-                    break
-                }
+            for {} true {} {
+                if lt(counter, ONE_WORD) { break }
 
                 mstore(copyPtr, mload(dataPtr))
 
