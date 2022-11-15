@@ -9,7 +9,7 @@ library ClonesWithImmutableArgs {
     error CreateFail();
 
     uint256 private constant FREE_MEMORY_POINTER_SLOT = 0x40;
-    uint256 private constant BOOTSTRAP_LENGTH = 0x3f;
+    uint256 private constant BOOTSTRAP_LENGTH = 0x3f; // 63 (43 instructions + 20 for implementation address)
     uint256 private constant ONE_WORD = 0x20;
 
     /// @notice Creates a clone proxy of the implementation contract, with immutable args
@@ -79,26 +79,28 @@ library ClonesWithImmutableArgs {
                 // 80          | DUP1                  | 0 0 rds success 0 rds   | [0 - cds): calldata, [cds - cds + e): extraData
                 // 3e          | RETURNDATACOPY        | success 0 rds           | [0 - rds): returndata, ... the rest might be dirty
 
-                // 60 0x33     | PUSH1 0x33            | 0x33 success            | [0 - rds): returndata, ... the rest might be dirty
-                // 57          | JUMPI                 |                         | [0 - rds): returndata, ... the rest might be dirty
+                // 60 0x33     | PUSH1 0x33            | 0x33 success 0 rds      | [0 - rds): returndata, ... the rest might be dirty
+                // 57          | JUMPI                 | 0 rds                   | [0 - rds): returndata, ... the rest might be dirty
 
                 // --- revert ---
                 // fd          | REVERT                |                         | [0 - rds): returndata, ... the rest might be dirty
 
                 // --- return ---
-                // 5b          | JUMPDEST              |                         | [0 - rds): returndata, ... the rest might be dirty
+                // 5b          | JUMPDEST              | 0 rds                   | [0 - rds): returndata, ... the rest might be dirty
                 // f3          | RETURN                |                         | [0 - rds): returndata, ... the rest might be dirty
 
                 mstore(
                     ptr,
                     or(
+                        // ⎬  ♠︎♠︎♠︎♠︎         ♣︎♣︎         ⎨           -              ♥︎♥︎♥︎♥︎-     ♦︎♦︎      -           >
                         hex"610000_3d_81_600a_3d_39_f3_36_3d_3d_37_3d_3d_3d_3d_610000_80_6035_36_39_36_01_3d_73",
-                        or(shl(0xe8, runSize), shl(0x58, extraLength))
+                        or(shl(0xe8, runSize), shl(0x58, extraLength)) // ♠︎=runSize, ♥︎=extraLength
                     )
                 )
 
                 mstore(add(ptr, 0x1e), shl(0x60, implementation))
 
+                //                        >     -                 ☼☼   -        |
                 mstore(add(ptr, 0x32), hex"5a_f4_3d_3d_93_80_3e_6033_57_fd_5b_f3")
 
                 // -------------------------------------------------------------------------------------------------------------
