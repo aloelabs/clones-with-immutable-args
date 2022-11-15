@@ -17,8 +17,7 @@ library Create2 {
      * `deployer`. If `deployer` is this contract's address, returns the same value as {computeAddress}.
      */
     function computeAddress(bytes32 salt, bytes32 bytecodeHash, address deployer) internal pure returns (address addr) {
-        /// @solidity memory-safe-assembly
-        assembly {
+        assembly ("memory-safe") {
             let ptr := mload(0x40) // Get free memory pointer
 
             // |                   | ↓ ptr ...  ↓ ptr + 0x0B (start) ...  ↓ ptr + 0x20 ...  ↓ ptr + 0x40 ...   |

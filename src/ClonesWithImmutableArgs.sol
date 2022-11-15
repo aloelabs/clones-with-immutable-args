@@ -75,7 +75,7 @@ library ClonesWithImmutableArgs {
         bytes32 salt,
         address deployer,
         bytes memory data
-    ) internal pure returns (address predicted) {
+    ) internal view returns (address predicted) {
         (uint256 creationPtr, uint256 creationSize) = _getCreationCode(implementation, data);
 
         bytes32 bytecodeHash;
@@ -108,10 +108,9 @@ library ClonesWithImmutableArgs {
     function _getCreationCode(
         address implementation,
         bytes memory data
-    ) private pure returns (uint256 ptr, uint256 creationSize) {
+    ) private view returns (uint256 ptr, uint256 creationSize) {
         // unrealistic for memory ptr or data length to exceed 256 bits
-        assembly {
-            // TODO mark whether this assembly is memory safe for new IR optimizer
+        assembly ("memory-safe") {
             let extraLength := add(mload(data), 2) // +2 bytes for telling how much data there is appended to the call
             creationSize := add(extraLength, BOOTSTRAP_LENGTH)
             let runSize := sub(creationSize, 0x0a)
@@ -183,44 +182,38 @@ library ClonesWithImmutableArgs {
                 ptr,
                 or(
                     // ⎬  ♠︎♠︎♠︎♠︎         ♣︎♣︎         ⎨           -              ♥︎♥︎♥︎♥︎-     ♦︎♦︎      -           >
-                    hex"610000_3d_81_600a_3d_39_f3_36_3d_3d_37_3d_3d_3d_3d_610000_80_6035_36_39_36_01_3d_73",
+                    hex"610000_3d_81_600a_3d_39_f3_36_3d_3d_37_3d_3d_3d_3d_610000_80_6035_36_39_36_01_3d_73", // 30 bytes
                     or(shl(0xe8, runSize), shl(0x58, extraLength)) // ♠︎=runSize, ♥︎=extraLength
                 )
             )
 
-            mstore(add(ptr, 0x1e), shl(0x60, implementation))
+            mstore(add(ptr, 0x1e), shl(0x60, implementation)) // 20 bytes
 
             //                        >     -                 ☼☼   -        |
-            mstore(add(ptr, 0x32), hex"5a_f4_3d_3d_93_80_3e_6033_57_fd_5b_f3")
+            mstore(add(ptr, 0x32), hex"5a_f4_3d_3d_93_80_3e_6033_57_fd_5b_f3") // 13 bytes
 
             // -------------------------------------------------------------------------------------------------------------
             // APPENDED DATA (Accessible from extcodecopy)
             // (but also send as appended data to the delegatecall)
             // -------------------------------------------------------------------------------------------------------------
 
-            let counter := mload(data)
-            let copyPtr := add(ptr, BOOTSTRAP_LENGTH)
-            let dataPtr := add(data, ONE_WORD)
+            extraLength := sub(extraLength, 2)
 
-            for {} true {} {
-                if lt(counter, ONE_WORD) { break }
-
-                mstore(copyPtr, mload(dataPtr))
-
-                copyPtr := add(copyPtr, ONE_WORD)
-                dataPtr := add(dataPtr, ONE_WORD)
-
-                counter := sub(counter, ONE_WORD)
+            if iszero(
+                staticcall(
+                    gas(),
+                    0x04, // identity precompile
+                    add(data, ONE_WORD), // copy source
+                    extraLength,
+                    add(ptr, BOOTSTRAP_LENGTH), // copy destination
+                    extraLength
+                )
+            ) {
+                mstore(custom_error_sig_ptr, IdentityPrecompileFailure_error_signature)
+                revert(custom_error_sig_ptr, custom_error_length)
             }
 
-            let mask := shl(mul(0x8, sub(ONE_WORD, counter)), not(0))
-
-            mstore(copyPtr, and(mload(dataPtr), mask))
-            copyPtr := add(copyPtr, counter)
-            mstore(copyPtr, shl(0xf0, extraLength))
-
-            // Update free memory pointer
-            mstore(FREE_MEMORY_POINTER_SLOT, add(ptr, creationSize))
+            mstore(add(add(ptr, BOOTSTRAP_LENGTH), extraLength), shl(0xf0, add(extraLength, 2)))
         }
     }
 }
