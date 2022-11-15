@@ -17,10 +17,7 @@ library ClonesWithImmutableArgs {
     /// @param implementation The implementation contract to clone
     /// @param data Encoded immutable args
     /// @return instance The address of the created clone
-    function clone(address implementation, bytes memory data)
-        internal
-        returns (address payable instance)
-    {
+    function clone(address implementation, bytes memory data) internal returns (address payable instance) {
         // unrealistic for memory ptr or data length to exceed 256 bits
         unchecked {
             // solhint-disable-next-line no-inline-assembly
@@ -31,7 +28,7 @@ library ClonesWithImmutableArgs {
 
                 // free memory pointer
                 let ptr := mload(FREE_MEMORY_POINTER_SLOT)
-                
+
                 // -------------------------------------------------------------------------------------------------------------
                 // CREATION (10 bytes)
                 // -------------------------------------------------------------------------------------------------------------
@@ -81,7 +78,7 @@ library ClonesWithImmutableArgs {
                 // 93          | SWAP4                 | 0 rds success 0 rds     | [0 - cds): calldata, [cds - cds + e): extraData
                 // 80          | DUP1                  | 0 0 rds success 0 rds   | [0 - cds): calldata, [cds - cds + e): extraData
                 // 3e          | RETURNDATACOPY        | success 0 rds           | [0 - rds): returndata, ... the rest might be dirty
-                
+
                 // 60 0x33     | PUSH1 0x33            | 0x33 success            | [0 - rds): returndata, ... the rest might be dirty
                 // 57          | JUMPI                 |                         | [0 - rds): returndata, ... the rest might be dirty
 
@@ -96,23 +93,13 @@ library ClonesWithImmutableArgs {
                     ptr,
                     or(
                         hex"610000_3d_81_600a_3d_39_f3_36_3d_3d_37_3d_3d_3d_3d_610000_80_6035_36_39_36_01_3d_73",
-                        or(
-                            shl(0xe8, runSize),
-                            shl(0x58, extraLength)
-                        )
+                        or(shl(0xe8, runSize), shl(0x58, extraLength))
                     )
                 )
-                
-                mstore(
-                    add(ptr, 0x1e),
-                    shl(0x60, implementation)
-                )
 
-                mstore(
-                    add(ptr, 0x32),
-                    hex"5a_f4_3d_3d_93_80_3e_6033_57_fd_5b_f3"
-                )
+                mstore(add(ptr, 0x1e), shl(0x60, implementation))
 
+                mstore(add(ptr, 0x32), hex"5a_f4_3d_3d_93_80_3e_6033_57_fd_5b_f3")
 
                 // -------------------------------------------------------------------------------------------------------------
                 // APPENDED DATA (Accessible from extcodecopy)
@@ -123,7 +110,11 @@ library ClonesWithImmutableArgs {
                 let copyPtr := add(ptr, BOOTSTRAP_LENGTH)
                 let dataPtr := add(data, ONE_WORD)
 
-                for {} true {} {
+                for {
+
+                } true {
+
+                } {
                     if lt(counter, ONE_WORD) {
                         break
                     }
@@ -135,11 +126,8 @@ library ClonesWithImmutableArgs {
 
                     counter := sub(counter, ONE_WORD)
                 }
-                    
-                let mask := shl(
-                    mul(0x8, sub(ONE_WORD, counter)), 
-                    not(0)
-                )
+
+                let mask := shl(mul(0x8, sub(ONE_WORD, counter)), not(0))
 
                 mstore(copyPtr, and(mload(dataPtr), mask))
                 copyPtr := add(copyPtr, counter)
@@ -150,8 +138,6 @@ library ClonesWithImmutableArgs {
                 // Update free memory pointer
                 mstore(FREE_MEMORY_POINTER_SLOT, add(ptr, creationSize))
             }
-
-            
 
             if (instance == address(0)) {
                 revert CreateFail();

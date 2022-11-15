@@ -7,7 +7,6 @@ import {ExampleClone} from "../ExampleClone.sol";
 import {ExampleCloneFactory} from "../ExampleCloneFactory.sol";
 
 contract ExampleCloneFactoryTest is Test {
-
     ExampleCloneFactory internal factory;
 
     function setUp() public {
@@ -19,12 +18,7 @@ contract ExampleCloneFactoryTest is Test {
     /// Gas benchmarking
     /// -----------------------------------------------------------------------
 
-    function testGas_clone(
-        address param1,
-        uint256 param2,
-        uint64 param3,
-        uint8 param4
-    ) public {
+    function testGas_clone(address param1, uint256 param2, uint64 param3, uint8 param4) public {
         factory.createClone(param1, param2, param3, param4);
     }
 
@@ -32,18 +26,8 @@ contract ExampleCloneFactoryTest is Test {
     /// Correctness tests
     /// -----------------------------------------------------------------------
 
-    function testCorrectness_clone(
-        address param1,
-        uint256 param2,
-        uint64 param3,
-        uint8 param4
-    ) public {
-        ExampleClone clone = factory.createClone(
-            param1,
-            param2,
-            param3,
-            param4
-        );
+    function testCorrectness_clone(address param1, uint256 param2, uint64 param3, uint8 param4) public {
+        ExampleClone clone = factory.createClone(param1, param2, param3, param4);
         assertEq(clone.param1(), param1);
         assertEq(clone.param2(), param2);
         assertEq(clone.param3(), param3);
