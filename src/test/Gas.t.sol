@@ -1,16 +1,16 @@
-// SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 
 import "./utils/Factory.sol";
 
 contract GasTest is Test {
-    Factory internal factory;
+    Factory public factory;
 
-    ClonableEIP1167 internal cloneA;
+    ClonableEIP1167 public cloneA;
 
-    ClonableWithImmutableArgs internal cloneB;
+    ClonableWithImmutableArgs public cloneB;
 
     function setUp() public {
         factory = new Factory(address(1));
@@ -21,22 +21,6 @@ contract GasTest is Test {
     /// -----------------------------------------------------------------------
     /// Gas benchmarking
     /// -----------------------------------------------------------------------
-
-    function testGas_actualImmutable_eip1167() public view {
-        cloneA.actualImmutable();
-    }
-
-    function testGas_actualImmutable_args() public view {
-        cloneB.actualImmutable();
-    }
-
-    function testGas_fakeImmutable_eip1167() public view {
-        cloneA.readFakeImmutable();
-    }
-
-    function testGas_fakeImmutable_args() public view {
-        cloneB.readFakeImmutable();
-    }
 
     function testGas_deploy_eip1167() public {
         factory.cloneEIP1167(address(this), false);
@@ -52,5 +36,21 @@ contract GasTest is Test {
 
     function testGas_deployDeterministic_args() public {
         factory.cloneWithImmutableArgs(address(this), true);
+    }
+
+    function testGas_actualImmutable_eip1167() public view {
+        cloneA.actualImmutable();
+    }
+
+    function testGas_actualImmutable_args() public view {
+        cloneB.actualImmutable();
+    }
+
+    function testGas_fakeImmutable_eip1167() public view {
+        cloneA.readFakeImmutable();
+    }
+
+    function testGas_fakeImmutable_args() public view {
+        cloneB.readFakeImmutable();
     }
 }

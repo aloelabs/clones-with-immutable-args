@@ -4,19 +4,19 @@ pragma solidity ^0.8.15;
 contract ClonableEIP1167 {
     address public immutable actualImmutable;
 
-    address private fakeImmutable;
+    address private _fakeImmutable;
 
     constructor(address actualImmutable_) {
         actualImmutable = actualImmutable_;
     }
 
-    function initialize(address fakeImmutable_) external {
-        require(fakeImmutable == address(0));
-        fakeImmutable = fakeImmutable_;
+    function initialize(address fakeImmutable) external {
+        require(_fakeImmutable == address(0), "Already initialized");
+        _fakeImmutable = fakeImmutable;
     }
 
     function readFakeImmutable() external view returns (address) {
-        return fakeImmutable;
+        return _fakeImmutable;
     }
 
     function msgData(bytes memory input) external pure returns (bytes memory, bytes memory) {

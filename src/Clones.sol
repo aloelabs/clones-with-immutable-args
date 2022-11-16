@@ -57,6 +57,16 @@ library Clones {
      */
     function predictDeterministicAddress(
         address implementation,
+        bytes32 salt
+    ) internal view returns (address predicted) {
+        return predictDeterministicAddress(implementation, salt, address(this));
+    }
+
+    /**
+     * @dev Computes the address of a clone deployed using {Clones-cloneDeterministic}.
+     */
+    function predictDeterministicAddress(
+        address implementation,
         bytes32 salt,
         address deployer
     ) internal pure returns (address predicted) {
@@ -70,15 +80,5 @@ library Clones {
             mstore(add(ptr, 0x78), keccak256(add(ptr, 0x0c), 0x37))
             predicted := keccak256(add(ptr, 0x43), 0x55)
         }
-    }
-
-    /**
-     * @dev Computes the address of a clone deployed using {Clones-cloneDeterministic}.
-     */
-    function predictDeterministicAddress(
-        address implementation,
-        bytes32 salt
-    ) internal view returns (address predicted) {
-        return predictDeterministicAddress(implementation, salt, address(this));
     }
 }

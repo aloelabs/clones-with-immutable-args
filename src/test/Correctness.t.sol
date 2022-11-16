@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: BSD
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 
@@ -8,10 +8,15 @@ import "./utils/Factory.sol";
 contract GasTest is Test {
     function setUp() public {}
 
-    function testCorrectness_eip1167(address actualImmutable, address fakeImmutable, bool deterministic, bytes memory rand) public {
+    function testCorrectness_eip1167(
+        address actualImmutable,
+        address fakeImmutable,
+        bool deterministic,
+        bytes memory rand
+    ) public {
         Factory factory = new Factory(actualImmutable);
         ClonableEIP1167 clone = ClonableEIP1167(factory.cloneEIP1167(fakeImmutable, deterministic));
-        
+
         assertEq(clone.actualImmutable(), actualImmutable);
         assertEq(clone.readFakeImmutable(), fakeImmutable);
 
@@ -28,10 +33,17 @@ contract GasTest is Test {
         }
     }
 
-    function testCorrectness_immutableArgs(address actualImmutable, address fakeImmutable, bool deterministic, bytes memory rand) public {
+    function testCorrectness_immutableArgs(
+        address actualImmutable,
+        address fakeImmutable,
+        bool deterministic,
+        bytes memory rand
+    ) public {
         Factory factory = new Factory(actualImmutable);
-        ClonableWithImmutableArgs clone = ClonableWithImmutableArgs(factory.cloneWithImmutableArgs(fakeImmutable, deterministic));
-        
+        ClonableWithImmutableArgs clone = ClonableWithImmutableArgs(
+            factory.cloneWithImmutableArgs(fakeImmutable, deterministic)
+        );
+
         assertEq(clone.actualImmutable(), actualImmutable);
         assertEq(clone.readFakeImmutable(), fakeImmutable);
 
@@ -57,13 +69,16 @@ contract GasTest is Test {
             k++;
         }
         expected[k] = 0x00;
-        expected[k+1] = 0x16; // 0x16==22. Appended calldata has 20 bytes for address and 2 bytes for storing length
+        expected[k + 1] = 0x16; // 0x16==22. Appended calldata has 20 bytes for address and 2 bytes for storing length
 
         assertEq(msgData, expected);
 
         if (deterministic) {
             bytes32 salt = keccak256(abi.encode(fakeImmutable));
-            assertEq(address(clone), ClonesWithImmutableArgs.predictDeterministicAddress(address(impl), salt, address(factory), addr));
+            assertEq(
+                address(clone),
+                ClonesWithImmutableArgs.predictDeterministicAddress(address(impl), salt, address(factory), addr)
+            );
         }
     }
 }

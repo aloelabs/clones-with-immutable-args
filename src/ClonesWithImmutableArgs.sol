@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD
+// SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.15;
 
 import {Create2} from "./Create2.sol";
@@ -8,19 +8,18 @@ import {Create2} from "./Create2.sol";
 /// @notice Enables creating clone contracts with immutable args
 library ClonesWithImmutableArgs {
     // abi.encodeWithSignature("CreateFail()")
-    uint256 constant CreateFail_error_signature = 0xebfef18800000000000000000000000000000000000000000000000000000000;
+    uint256 private constant _CREATE_FAIL_ERROR_SIG =
+        0xebfef18800000000000000000000000000000000000000000000000000000000;
 
     // abi.encodeWithSignature("IdentityPrecompileFailure()")
-    uint256 constant IdentityPrecompileFailure_error_signature =
+    uint256 private constant _IDENTITY_PRECOMPILE_ERROR_SIG =
         0x3a008ffa00000000000000000000000000000000000000000000000000000000;
 
-    uint256 constant custom_error_sig_ptr = 0x0;
+    uint256 private constant _CUSTOM_ERROR_SIG_PTR = 0x0;
 
-    uint256 constant custom_error_length = 0x4;
+    uint256 private constant _CUSTOM_ERROR_LENGTH = 0x4;
 
-    uint256 private constant FREE_MEMORY_POINTER_SLOT = 0x40;
-    uint256 private constant BOOTSTRAP_LENGTH = 0x3f; // 63 (43 instructions + 20 for implementation address)
-    uint256 private constant ONE_WORD = 0x20;
+    uint256 private constant _BOOTSTRAP_LENGTH = 0x3f; // 63 (43 instructions + 20 for implementation address)
 
     /// @notice Creates a clone proxy of the implementation contract with immutable args
     /// @dev data cannot exceed 65535 bytes, since 2 bytes are used to store the data length
@@ -35,8 +34,8 @@ library ClonesWithImmutableArgs {
 
             // if the create failed, the instance address won't be set
             if iszero(instance) {
-                mstore(custom_error_sig_ptr, CreateFail_error_signature)
-                revert(custom_error_sig_ptr, custom_error_length)
+                mstore(_CUSTOM_ERROR_SIG_PTR, _CREATE_FAIL_ERROR_SIG)
+                revert(_CUSTOM_ERROR_SIG_PTR, _CUSTOM_ERROR_LENGTH)
             }
         }
     }
@@ -59,8 +58,8 @@ library ClonesWithImmutableArgs {
 
             // if the create failed, the instance address won't be set
             if iszero(instance) {
-                mstore(custom_error_sig_ptr, CreateFail_error_signature)
-                revert(custom_error_sig_ptr, custom_error_length)
+                mstore(_CUSTOM_ERROR_SIG_PTR, _CREATE_FAIL_ERROR_SIG)
+                revert(_CUSTOM_ERROR_SIG_PTR, _CUSTOM_ERROR_LENGTH)
             }
         }
     }
@@ -112,11 +111,11 @@ library ClonesWithImmutableArgs {
         // unrealistic for memory ptr or data length to exceed 256 bits
         assembly ("memory-safe") {
             let extraLength := add(mload(data), 2) // +2 bytes for telling how much data there is appended to the call
-            creationSize := add(extraLength, BOOTSTRAP_LENGTH)
+            creationSize := add(extraLength, _BOOTSTRAP_LENGTH)
             let runSize := sub(creationSize, 0x0a)
 
             // free memory pointer
-            ptr := mload(FREE_MEMORY_POINTER_SLOT)
+            ptr := mload(0x40)
 
             // -------------------------------------------------------------------------------------------------------------
             // CREATION (10 bytes)
@@ -203,17 +202,17 @@ library ClonesWithImmutableArgs {
                 staticcall(
                     gas(),
                     0x04, // identity precompile
-                    add(data, ONE_WORD), // copy source
+                    add(data, 0x20), // copy source
                     extraLength,
-                    add(ptr, BOOTSTRAP_LENGTH), // copy destination
+                    add(ptr, _BOOTSTRAP_LENGTH), // copy destination
                     extraLength
                 )
             ) {
-                mstore(custom_error_sig_ptr, IdentityPrecompileFailure_error_signature)
-                revert(custom_error_sig_ptr, custom_error_length)
+                mstore(_CUSTOM_ERROR_SIG_PTR, _IDENTITY_PRECOMPILE_ERROR_SIG)
+                revert(_CUSTOM_ERROR_SIG_PTR, _CUSTOM_ERROR_LENGTH)
             }
 
-            mstore(add(add(ptr, BOOTSTRAP_LENGTH), extraLength), shl(0xf0, add(extraLength, 2)))
+            mstore(add(add(ptr, _BOOTSTRAP_LENGTH), extraLength), shl(0xf0, add(extraLength, 2)))
         }
     }
 }

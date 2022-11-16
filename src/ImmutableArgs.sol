@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD
+// SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.15;
 
 /// @title ImmutableArgs
@@ -39,7 +39,7 @@ library ImmutableArgs {
     }
 
     /// @return offset The offset of the packed immutable args in calldata
-    function _startOfImmutableArgs() internal pure returns (uint256 offset) {
+    function _startOfImmutableArgs() private pure returns (uint256 offset) {
         assembly {
             //                                      read final 2 bytes of calldata, i.e. `extraLength`
             offset := sub(calldatasize(), shr(0xf0, calldataload(sub(calldatasize(), 2))))

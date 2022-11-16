@@ -5,7 +5,7 @@
     "zefram.eth",
     "Saw-mon & Natalie <sawmonandnatalie@gmail.com> (https://www.sawmon-and-natalie.com/)"
   ],
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "version": "2.0.0",
   "description": "Factory for deploying clones with immutable parameters.",
   "files": [
