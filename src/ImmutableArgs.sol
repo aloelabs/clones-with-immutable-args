@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD
 pragma solidity ^0.8.15;
 
-/// @title Clone
+/// @title ImmutableArgs
 /// @author zefram.eth, Saw-mon & Natalie
 /// @notice Provides helper functions for reading immutable args from calldata
-contract Clone {
+library ImmutableArgs {
     uint256 private constant ONE_WORD = 0x20;
 
     function _getArgOnlyAddress() internal pure returns (address arg) {
