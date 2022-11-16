@@ -2,19 +2,26 @@
   "extends": "solhint:recommended",
   "plugins": ["prettier"],
   "rules": {
-    "code-complexity": ["error", 8],
-    "compiler-version": ["error", ">=0.5.8"],
-    "const-name-snakecase": "off",
+    "code-complexity": ["error", 5],
+    "function-max-lines": ["warn", 50],
+    "max-line-length": ["error", 140],
+    "max-states-count": ["warn", 10],
+    "no-empty-blocks": "warn",
+    "no-unused-vars": "error",
+    "payable-fallback": "warn",
+    "reason-string": ["warn", { "maxLength": 64 }],
     "constructor-syntax": "error",
-    "func-visibility": ["error", { "ignoreConstructors": true }],
-    "max-line-length": ["error", 10000],
-    "not-rely-on-time": "off",
-    "prettier/prettier": [
-      "error",
-      {
-        "endOfLine": "auto"
-      }
-    ],
-    "reason-string": ["warn", { "maxLength": 64 }]
+
+    "comprehensive-interface": "off",
+
+    "func-param-name-mixedcase": "warn",
+    "modifier-name-mixedcase": "warn",
+    "private-vars-leading-underscore": ["warn", { "strict": true }],
+    "ordering": "warn",
+
+    "compiler-version": ["error", "^0.8.15"],
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
+    "no-inline-assembly": "off",
+    "not-rely-on-time": "off"
   }
 }
