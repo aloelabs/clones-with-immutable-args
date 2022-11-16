@@ -6,11 +6,11 @@ import "forge-std/Test.sol";
 import "./utils/Factory.sol";
 
 contract GasTest is Test {
-    Factory public factory;
+    Factory internal factory;
 
-    ClonableEIP1167 public cloneA;
+    ClonableEIP1167 internal cloneA;
 
-    ClonableWithImmutableArgs public cloneB;
+    ClonableWithImmutableArgs internal cloneB;
 
     function setUp() public {
         factory = new Factory(address(1));

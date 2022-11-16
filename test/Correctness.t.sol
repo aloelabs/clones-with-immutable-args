@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "./utils/Factory.sol";
 
-contract GasTest is Test {
+contract CorrectnessTest is Test {
     function setUp() public {}
 
     function testCorrectness_eip1167(

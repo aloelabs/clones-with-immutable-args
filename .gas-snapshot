@@ -1,5 +1,5 @@
-GasTest:testCorrectness_eip1167(address,address,bool,bytes) (runs: 256, μ: 856829, ~: 853470)
-GasTest:testCorrectness_immutableArgs(address,address,bool,bytes) (runs: 256, μ: 920507, ~: 904423)
+CorrectnessTest:testCorrectness_eip1167(address,address,bool,bytes) (runs: 256, μ: 856829, ~: 853470)
+CorrectnessTest:testCorrectness_immutableArgs(address,address,bool,bytes) (runs: 256, μ: 920507, ~: 904423)
 GasTest:testGas_actualImmutable_args() (gas: 8051)
 GasTest:testGas_actualImmutable_eip1167() (gas: 8058)
 GasTest:testGas_deployDeterministic_args() (gas: 53375)

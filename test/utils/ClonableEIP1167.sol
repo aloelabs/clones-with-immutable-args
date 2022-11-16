@@ -11,7 +11,7 @@ contract ClonableEIP1167 {
     }
 
     function initialize(address fakeImmutable) external {
-        require(_fakeImmutable == address(0), "Already initialized");
+        require(_fakeImmutable == address(0));
         _fakeImmutable = fakeImmutable;
     }
 
