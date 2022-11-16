@@ -33,4 +33,12 @@ contract ExampleCloneFactoryTest is Test {
         assertEq(clone.param3(), param3);
         assertEq(clone.param4(), param4);
     }
+
+    function testCalldataCorrectness_clone(address p1, uint256 p2, uint64 p3, uint8 p4, bytes memory main) public {
+        ExampleClone clone = factory.createClone(p1, p2, p3, p4);
+
+        bytes memory extra = abi.encodePacked(p1, p2, p3, p4);
+        assertEq(clone.all(main, false), main);
+        assertEq(clone.all(main, true), extra);
+    }
 }
