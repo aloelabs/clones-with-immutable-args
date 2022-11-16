@@ -2,7 +2,8 @@
 node_modules
 
 # Forge
-out/
 cache/
+build/
+broadcast/
 
-.env
+*.env

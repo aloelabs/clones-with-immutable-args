@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import {ImmutableArgs} from "../../ImmutableArgs.sol";
+import {ImmutableArgs} from "../../src/ImmutableArgs.sol";
 
 contract ClonableWithImmutableArgs {
     address public immutable actualImmutable;

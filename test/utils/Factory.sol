@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import {Clones} from "../../Clones.sol";
-import {ClonesWithImmutableArgs} from "../../ClonesWithImmutableArgs.sol";
+import {Clones} from "../../src/Clones.sol";
+import {ClonesWithImmutableArgs} from "../../src/ClonesWithImmutableArgs.sol";
 
 import {ClonableEIP1167} from "./ClonableEIP1167.sol";
 import {ClonableWithImmutableArgs} from "./ClonableWithImmutableArgs.sol";
