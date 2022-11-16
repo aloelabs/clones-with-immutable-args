@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 
 import "forge-std/Test.sol";
 
-import {ExampleClone} from "../ExampleClone.sol";
-import {ExampleCloneFactory} from "../ExampleCloneFactory.sol";
+import {ExampleClone} from "./utils/ExampleClone.sol";
+import {ExampleCloneFactory} from "./utils/ExampleCloneFactory.sol";
 
 contract ExampleCloneTest is Test {
     ExampleClone internal clone;

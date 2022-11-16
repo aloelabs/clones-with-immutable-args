@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {ExampleClone} from "./ExampleClone.sol";
-import {ClonesWithImmutableArgs} from "./ClonesWithImmutableArgs.sol";
+import {ClonesWithImmutableArgs} from "../../ClonesWithImmutableArgs.sol";
 
 contract ExampleCloneFactory {
     using ClonesWithImmutableArgs for address;

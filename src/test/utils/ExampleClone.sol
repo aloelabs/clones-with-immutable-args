@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD
 pragma solidity ^0.8.15;
 
-import {ImmutableArgs} from "./ImmutableArgs.sol";
+import {ImmutableArgs} from "../../ImmutableArgs.sol";
 
 contract ExampleClone {
     function param1() public pure returns (address) {
